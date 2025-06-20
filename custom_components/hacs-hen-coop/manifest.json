@@ -1,0 +1,12 @@
+{
+  "domain": "hacs-hen-coop",
+  "name": "HACS Hen Coop Controller",
+  "codeowners": [
+    "@nkrueger"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/NilsKrueger/hacs-hen-coop",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/NilsKrueger/hacs-hen-coop/issues",
+  "version": "0.1.0"
+}
