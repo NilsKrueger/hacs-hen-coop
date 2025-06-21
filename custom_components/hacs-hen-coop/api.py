@@ -1,4 +1,4 @@
-"""Sample API Client."""
+"""Hen Coop API Client."""
 
 from __future__ import annotations
 
@@ -36,50 +36,138 @@ def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
 
 
 class HenCoopApiClient:
-    """Sample API Client."""
+    """Hen Coop API Client."""
 
     def __init__(
         self,
-        username: str,
-        password: str,
+        host: str,
+        token: str,
         session: aiohttp.ClientSession,
     ) -> None:
-        """Sample API Client."""
-        self._username = username
-        self._password = password
-        self._session = session
+        """
+        Initialize the API client.
 
-    async def async_get_data(self) -> Any:
-        """Get data from the API."""
+        Args:
+            host: The host address of the API server (including http:// and port)
+            token: Bearer token for authentication
+            session: aiohttp client session
+
+        """
+        self._host = host.rstrip("/")
+        self._token = token
+        self._session = session
+        self._headers = {"Authorization": f"Bearer {token}"}
+
+    async def async_read_gpio_pin(self, pin: int) -> dict[str, int]:
+        """
+        Read the logic level of a specific GPIO pin.
+
+        Args:
+            pin: GPIO pin number (1-40)
+
+        Returns:
+            Dict containing pin number and value
+
+        """
         return await self._api_wrapper(
             method="get",
-            url="https://jsonplaceholder.typicode.com/posts/1",
+            url=f"{self._host}/gpio/{pin}",
         )
 
-    async def async_set_title(self, value: str) -> Any:
-        """Get data from the API."""
+    async def async_open_door(
+        self, duration: int = 120, duty_cycle: int = 75
+    ) -> dict[str, Any]:
+        """
+        Open the coop door.
+
+        Args:
+            duration: Motor operation duration in seconds
+            duty_cycle: PWM duty cycle percentage
+
+        Returns:
+            Status response
+
+        """
         return await self._api_wrapper(
-            method="patch",
-            url="https://jsonplaceholder.typicode.com/posts/1",
-            data={"title": value},
-            headers={"Content-type": "application/json; charset=UTF-8"},
+            method="post",
+            url=f"{self._host}/open-door",
+            params={"duration": duration, "duty_cycle": duty_cycle},
+        )
+
+    async def async_close_door(
+        self, duration: int = 120, duty_cycle: int = 75
+    ) -> dict[str, Any]:
+        """
+        Close the coop door.
+
+        Args:
+            duration: Motor operation duration in seconds
+            duty_cycle: PWM duty cycle percentage
+
+        Returns:
+            Status response
+
+        """
+        return await self._api_wrapper(
+            method="post",
+            url=f"{self._host}/close-door",
+            params={"duration": duration, "duty_cycle": duty_cycle},
+        )
+
+    async def async_stop(self) -> dict[str, Any]:
+        """
+        Stop all GPIO activity and clean up.
+
+        Returns:
+            Status response
+
+        """
+        return await self._api_wrapper(
+            method="post",
+            url=f"{self._host}/stop",
+        )
+
+    async def async_door_status(self) -> dict[str, Any]:
+        """
+        Get the current state of both reed sensors.
+
+        Returns:
+            Reed sensor states
+
+        """
+        return await self._api_wrapper(
+            method="get",
+            url=f"{self._host}/door-status",
         )
 
     async def _api_wrapper(
         self,
         method: str,
         url: str,
-        data: dict | None = None,
-        headers: dict | None = None,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> Any:
-        """Get information from the API."""
+        """
+        Make an API request.
+
+        Args:
+            method: HTTP method
+            url: API endpoint URL
+            data: Request body data
+            params: Query parameters
+
+        Returns:
+            API response as JSON
+
+        """
         try:
             async with async_timeout.timeout(10):
                 response = await self._session.request(
                     method=method,
                     url=url,
-                    headers=headers,
+                    headers=self._headers,
                     json=data,
+                    params=params,
                 )
                 _verify_response_or_raise(response)
                 return await response.json()

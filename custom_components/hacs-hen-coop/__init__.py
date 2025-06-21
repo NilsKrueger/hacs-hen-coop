@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
@@ -25,9 +25,10 @@ if TYPE_CHECKING:
     from .data import HenCoopConfigEntry
 
 PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
+    # Platform.SENSOR,
     Platform.BINARY_SENSOR,
-    Platform.SWITCH,
+    Platform.COVER,
+    # Platform.SWITCH,
 ]
 
 
@@ -45,8 +46,8 @@ async def async_setup_entry(
     )
     entry.runtime_data = HenCoopData(
         client=HenCoopApiClient(
-            username=entry.data[CONF_USERNAME],
-            password=entry.data[CONF_PASSWORD],
+            host=entry.data[CONF_HOST],
+            token=entry.data[CONF_API_TOKEN],
             session=async_get_clientsession(hass),
         ),
         integration=async_get_loaded_integration(hass, entry.domain),

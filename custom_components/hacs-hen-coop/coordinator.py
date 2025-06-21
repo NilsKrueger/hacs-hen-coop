@@ -11,6 +11,7 @@ from .api import (
     HenCoopApiClientAuthenticationError,
     HenCoopApiClientError,
 )
+from .const import LOGGER
 
 if TYPE_CHECKING:
     from .data import HenCoopConfigEntry
@@ -25,7 +26,9 @@ class HenCoopDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> Any:
         """Update data via library."""
         try:
-            return await self.config_entry.runtime_data.client.async_get_data()
+            data = await self.config_entry.runtime_data.client.async_door_status()
+            LOGGER.debug(f"API response: {data}")
+            return data  # noqa: TRY300
         except HenCoopApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except HenCoopApiClientError as exception:

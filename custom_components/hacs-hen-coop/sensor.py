@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 
+from .const import LOGGER
 from .entity import HenCoopEntity
 
 if TYPE_CHECKING:
@@ -17,9 +18,14 @@ if TYPE_CHECKING:
 
 ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
-        key="hacs-hen-coop",
-        name="Integration Sensor",
-        icon="mdi:format-quote-close",
+        key="top",
+        name="Hen Coop Door Top Sensor",
+        icon="mdi:door",
+    ),
+    SensorEntityDescription(
+        key="bottom",
+        name="Hen Coop Door Bottom Sensor",
+        icon="mdi:door",
     ),
 )
 
@@ -31,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     async_add_entities(
-        HenCoopSensor(
+        HenCoopDoorSensor(
             coordinator=entry.runtime_data.coordinator,
             entity_description=entity_description,
         )
@@ -39,8 +45,8 @@ async def async_setup_entry(
     )
 
 
-class HenCoopSensor(HenCoopEntity, SensorEntity):
-    """HenCoop Sensor class."""
+class HenCoopDoorSensor(HenCoopEntity, SensorEntity):
+    """Hen Coop Door Sensor class."""
 
     def __init__(
         self,
@@ -48,10 +54,14 @@ class HenCoopSensor(HenCoopEntity, SensorEntity):
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor class."""
-        super().__init__(coordinator)
+        # Pass the entity_description key as unique_id_suffix to the parent class
+        super().__init__(coordinator, unique_id_suffix=entity_description.key)
         self.entity_description = entity_description
+        # Use proper type for _attr_name (str or None)
+        self.entity_description = entity_description
+        LOGGER.debug(f"Sensor initialized with unique_id: {self._attr_unique_id}")
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> bool | None:
         """Return the native value of the sensor."""
-        return self.coordinator.data.get("body")
+        return self.coordinator.data.get(self.entity_description.key)

@@ -3,11 +3,16 @@
     "image": "mcr.microsoft.com/devcontainers/python:3.13",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [
-        8123
+        8123,
+        8000
     ],
     "portsAttributes": {
         "8123": {
             "label": "Home Assistant",
+            "onAutoForward": "notify"
+        },
+        "8000": {
+            "label": "Hen Coop API Port",
             "onAutoForward": "notify"
         }
     },
