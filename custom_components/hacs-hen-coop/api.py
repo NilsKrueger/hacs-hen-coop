@@ -74,44 +74,20 @@ class HenCoopApiClient:
             url=f"{self._host}/gpio/{pin}",
         )
 
-    async def async_open_door(
-        self, duration: int = 120, duty_cycle: int = 75
-    ) -> dict[str, Any]:
-        """
-        Open the coop door.
-
-        Args:
-            duration: Motor operation duration in seconds
-            duty_cycle: PWM duty cycle percentage
-
-        Returns:
-            Status response
-
-        """
+    async def async_open_door(self, duration: int = 120) -> dict[str, Any]:
+        """Open the coop door with a bounded motor runtime."""
         return await self._api_wrapper(
             method="post",
             url=f"{self._host}/open-door",
-            params={"duration": duration, "duty_cycle": duty_cycle},
+            params={"duration": duration},
         )
 
-    async def async_close_door(
-        self, duration: int = 120, duty_cycle: int = 75
-    ) -> dict[str, Any]:
-        """
-        Close the coop door.
-
-        Args:
-            duration: Motor operation duration in seconds
-            duty_cycle: PWM duty cycle percentage
-
-        Returns:
-            Status response
-
-        """
+    async def async_close_door(self, duration: int = 120) -> dict[str, Any]:
+        """Close the coop door with a bounded motor runtime."""
         return await self._api_wrapper(
             method="post",
             url=f"{self._host}/close-door",
-            params={"duration": duration, "duty_cycle": duty_cycle},
+            params={"duration": duration},
         )
 
     async def async_stop(self) -> dict[str, Any]:
@@ -162,16 +138,18 @@ class HenCoopApiClient:
         """
         try:
             async with async_timeout.timeout(10):
-                response = await self._session.request(
+                async with self._session.request(
                     method=method,
                     url=url,
                     headers=self._headers,
                     json=data,
                     params=params,
-                )
-                _verify_response_or_raise(response)
-                return await response.json()
+                ) as response:
+                    _verify_response_or_raise(response)
+                    return await response.json()
 
+        except HenCoopApiClientError:
+            raise
         except TimeoutError as exception:
             msg = f"Timeout error fetching information - {exception}"
             raise HenCoopApiClientCommunicationError(

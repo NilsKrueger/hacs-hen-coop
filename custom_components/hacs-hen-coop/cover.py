@@ -73,20 +73,17 @@ class HenCoopDoorCover(HenCoopEntity, CoverEntity):
         door_top = self.coordinator.data.get("top", False)
         door_bottom = self.coordinator.data.get("bottom", False)
 
-        # Door is considered closed when bottom sensor is triggered
-        return not door_top and door_bottom
+        return None if door_top == door_bottom else door_bottom
 
     @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
-        # This would require tracking door movement state
-        return None
+        return (self.coordinator.data or {}).get("motion") == "opening"
 
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
-        # This would require tracking door movement state
-        return None
+        return (self.coordinator.data or {}).get("motion") == "closing"
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
