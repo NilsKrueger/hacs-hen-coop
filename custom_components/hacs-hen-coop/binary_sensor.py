@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -23,13 +22,11 @@ if TYPE_CHECKING:
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
         key="top",
-        name="HenCoop Binary Sensor Top",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Upper limit switch",
     ),
     BinarySensorEntityDescription(
         key="bottom",
-        name="HenCoop Binary Sensor Bottom",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Lower limit switch",
     ),
 )
 
@@ -62,8 +59,6 @@ class HenCoopBinarySensor(HenCoopEntity, BinarySensorEntity):
         """Initialize the binary_sensor class."""
         # Pass the entity_description key as unique_id_suffix to the parent class
         super().__init__(coordinator, unique_id_suffix=entity_description.key)
-        self.entity_description = entity_description
-        # Use proper type for _attr_name (str or None)
         self.entity_description = entity_description
         LOGGER.debug(
             f"Binary sensor initialized with unique_id: {self._attr_unique_id}"

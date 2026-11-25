@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
 import socket
+from http import HTTPStatus
 from typing import Any
 
 import aiohttp
-import async_timeout
 
 
 class HenCoopApiClientError(Exception):
     """Exception to indicate a general API error."""
+
+
+class HenCoopDoorBusyError(HenCoopApiClientError):
+    """Another movement is already active."""
 
 
 class HenCoopApiClientCommunicationError(
@@ -32,6 +37,9 @@ def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
         raise HenCoopApiClientAuthenticationError(
             msg,
         )
+    if response.status == HTTPStatus.CONFLICT:
+        msg = "Door is moving; stop it before changing direction"
+        raise HenCoopDoorBusyError(msg)
     response.raise_for_status()
 
 
@@ -137,7 +145,7 @@ class HenCoopApiClient:
 
         """
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 async with self._session.request(
                     method=method,
                     url=url,

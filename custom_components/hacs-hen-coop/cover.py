@@ -10,7 +10,9 @@ from homeassistant.components.cover import (
     CoverEntityDescription,
     CoverEntityFeature,
 )
+from homeassistant.exceptions import HomeAssistantError
 
+from .api import HenCoopDoorBusyError
 from .const import LOGGER
 from .entity import HenCoopEntity
 
@@ -65,6 +67,13 @@ class HenCoopDoorCover(HenCoopEntity, CoverEntity):
         LOGGER.debug(f"Cover initialized with unique_id: {self._attr_unique_id}")
 
     @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Expose the last completed movement's result for automations."""
+        return {
+            "last_stop_reason": (self.coordinator.data or {}).get("last_stop_reason")
+        }
+
+    @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if not self.coordinator.data:
@@ -85,19 +94,25 @@ class HenCoopDoorCover(HenCoopEntity, CoverEntity):
         """Return if the cover is closing."""
         return (self.coordinator.data or {}).get("motion") == "closing"
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **_: Any) -> None:
         """Open the cover."""
         LOGGER.debug("Opening hen coop door")
-        await self.coordinator.config_entry.runtime_data.client.async_open_door()
+        try:
+            await self.coordinator.config_entry.runtime_data.client.async_open_door()
+        except HenCoopDoorBusyError as exc:
+            raise HomeAssistantError(str(exc)) from exc
         await self.coordinator.async_request_refresh()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **_: Any) -> None:
         """Close the cover."""
         LOGGER.debug("Closing hen coop door")
-        await self.coordinator.config_entry.runtime_data.client.async_close_door()
+        try:
+            await self.coordinator.config_entry.runtime_data.client.async_close_door()
+        except HenCoopDoorBusyError as exc:
+            raise HomeAssistantError(str(exc)) from exc
         await self.coordinator.async_request_refresh()
 
-    async def async_stop_cover(self, **kwargs) -> None:
+    async def async_stop_cover(self, **_: Any) -> None:
         """Stop the cover."""
         LOGGER.debug("Stopping hen coop door")
         await self.coordinator.config_entry.runtime_data.client.async_stop()

@@ -1,0 +1,1 @@
+"""Hen Coop integration tests."""
